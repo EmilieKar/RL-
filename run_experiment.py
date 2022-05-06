@@ -4,7 +4,7 @@ import importlib.util
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--agentfile", type=str, help="file with Agent object", default="agent.py")
-parser.add_argument("--env", type=str, help="Environment", default="FrozenLake-v0")
+parser.add_argument("--env", type=str, help="Environment", default="FrozenLake-v1")
 args = parser.parse_args()
 
 spec = importlib.util.spec_from_file_location('Agent', args.agentfile)
@@ -38,4 +38,6 @@ for _ in range(10000):
 
     if done:
         observation = env.reset() 
+print(agent.q)
+print(agent.rewards)
 env.close()
