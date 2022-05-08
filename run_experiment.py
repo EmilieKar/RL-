@@ -1,6 +1,10 @@
 import argparse
 import gym
 import importlib.util
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--agentfile", type=str, help="file with Agent object", default="agent.py")
@@ -30,14 +34,51 @@ state_dim = env.observation_space.n
 agent = agentfile.Agent(state_dim, action_dim)
 
 observation = env.reset()
-for _ in range(10000): 
+
+iterations = 10000
+five_mov_avg = [0,0,0,0,0] #Initialize 5 mov avg to be 0
+avg_rewards = np.empty((0))
+run = 0
+
+for x in range(iterations): 
     #env.render()
     action = agent.act(observation) # your agent here (this takes random actions)
     observation, reward, done, info = env.step(action)
     agent.observe(observation, reward, done)
 
     if done:
+        #calculate moving five turn avg
+        five_mov_avg[run%5] = reward
+        avg_rewards = np.append(avg_rewards, np.mean(five_mov_avg))
+        run += 1
         observation = env.reset() 
-print(agent.q)
-print(agent.rewards)
+
+# Plot avg_reward for 5 window
+sns.lineplot(data = avg_rewards)
+plt.show()
+
+# Print better overview of q
+# l = left, d = down, r = right, u = up
+dir_dict = {'0':'l', '1': 'd', '2': 'r', '3':'u' }
+dir_list = []
+for a in agent.q:
+    max_indx = np.where(a == np.amax(a))
+    key = ""
+    for elem in max_indx[0]: 
+        key += dir_dict[str(elem)] 
+    dir_list.append(key)
+
+horizontal_n = 4
+vertical_n = 4
+for i in range(vertical_n):
+    s = '|\t'
+    for j in range(horizontal_n):
+        tmp = dir_list[j + i*horizontal_n] 
+        if len(tmp) > 3:
+            tmp += '\t'
+        else:
+            tmp += '\t\t\t'
+        s += tmp
+    print(s + '|')
+    
 env.close()
