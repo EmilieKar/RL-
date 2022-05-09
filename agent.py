@@ -18,7 +18,11 @@ class Agent(object): #Keep the class name!
     def observe(self, observation, reward, done):
         #print(self.state,self.action)
         # TODO fix done
-        self.q[self.state,self.action] = self.q[self.state,self.action] + self.a*(reward + self.g*np.max(self.q[observation]) - self.q[self.state,self.action])
+        if done:
+            self.q[self.state,self.action] = self.q[self.state,self.action] + self.a*(reward - self.q[self.state,self.action])
+        else:
+            self.q[self.state,self.action] = self.q[self.state,self.action] + self.a*(reward + self.g*np.max(self.q[observation]) - self.q[self.state,self.action])
+        
         self.rewards += reward
         
 
