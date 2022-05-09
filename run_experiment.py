@@ -36,7 +36,7 @@ agent = agentfile.Agent(state_dim, action_dim)
 observation = env.reset()
 
 iterations = 10000
-five_mov_avg = [0,0,0,0,0] #Initialize 5 mov avg to be 0
+five_mov_avg = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] #Initialize 15 mov avg to be 0
 avg_rewards = np.empty((0))
 run = 0
 
@@ -47,9 +47,10 @@ for x in range(iterations):
     agent.observe(observation, reward, done)
 
     if done:
-        #calculate moving five turn avg
-        five_mov_avg[run%5] = reward
-        avg_rewards = np.append(avg_rewards, np.mean(five_mov_avg))
+        #calculate moving 15 turn avg
+        five_mov_avg[run%15] = reward
+        if run%15 == 0:
+            avg_rewards = np.append(avg_rewards, np.mean(five_mov_avg))
         run += 1
         observation = env.reset() 
 
