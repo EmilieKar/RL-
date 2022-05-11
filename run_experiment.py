@@ -65,12 +65,12 @@ plot_df = pd.DataFrame({'episodes': episodes, 'avg_reward': values})
 print(plot_df)
     
 # Plot avg_reward for 5 window
-sns.lineplot(data = plot_df, x='episodes', y = 'avg_rewards')
+sns.lineplot(data = plot_df, x='episodes', y = 'avg_reward')
 plt.show()
 
 # Print better overview of q
 # l = left, d = down, r = right, u = up
-"""
+
 dir_dict = {'0':'l', '1': 'd', '2': 'r', '3':'u' }
 dir_list = []
 for a in agent.q:
@@ -93,5 +93,5 @@ for i in range(vertical_n):
             tmp += '\t\t'
         s += tmp
     print(s + '|')
-"""  
+ 
 env.close()
