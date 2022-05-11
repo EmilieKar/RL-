@@ -8,7 +8,7 @@ import pandas as pd
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--agentfile", type=str, help="file with Agent object", default="sarsa.py")
-parser.add_argument("--env", type=str, help="Environment", default="riverswim")
+parser.add_argument("--env", type=str, help="Environment", default="FrozenLake-v1")
 args = parser.parse_args()
 
 spec = importlib.util.spec_from_file_location('Agent', args.agentfile)
@@ -17,7 +17,7 @@ spec.loader.exec_module(agentfile)
 reward = []
 
 try:
-    env = gym.make(args.env) # ev test to turn of slip , is_slippery = False
+    env = gym.make(args.env,is_slippery = False) # ev test to turn of slip , is_slippery = False
     print("Loaded ", args.env)
 except:
     print(args.env +':Env')
@@ -36,10 +36,9 @@ agent = agentfile.Agent(state_dim, action_dim)
 observation = env.reset()
 
 iterations = 10000
-avg_len = 25
-five_mov_avg = [0 for _ in range(avg_len)] #Initialize 15 mov avg to be 0
-avg_rewards = np.empty((0))
-run = 0
+window_size = 5
+stored_rewards = [0 for _ in range(window_size)]
+runs = 0
 
 for x in range(iterations): 
     #env.render()
@@ -48,14 +47,25 @@ for x in range(iterations):
     agent.observe(observation, reward, done)
 
     if done:
-        #calculate moving 15 turn avg
-        five_mov_avg[run%avg_len] = reward
-        avg_rewards = np.append(avg_rewards, np.mean(five_mov_avg))
-        run += 1
+        runs += 1
+        stored_rewards.append(reward)
         observation = env.reset() 
 
+# Not the prettiest code but this plots a linechart with episodes on x-axis and 
+# avg_reward on y axis with error margin indicated automatically by seaborn
+
+values = []
+for i in range(runs):
+    values += stored_rewards[i:i+window_size]
+
+episodes = [i for _ in range(window_size) for i in range(runs)]
+
+plot_df = pd.DataFrame({'episodes': episodes, 'avg_reward': values})
+
+print(plot_df)
+    
 # Plot avg_reward for 5 window
-sns.lineplot(data = avg_rewards)
+sns.lineplot(data = plot_df, x='episodes', y = 'avg_rewards')
 plt.show()
 
 # Print better overview of q
