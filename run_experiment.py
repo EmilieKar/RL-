@@ -17,7 +17,7 @@ spec.loader.exec_module(agentfile)
 reward = []
 
 try:
-    env = gym.make(args.env,is_slippery = False) # ev test to turn of slip , is_slippery = False
+    env = gym.make(args.env,is_slippery = True) # ev test to turn of slip , is_slippery = False
     print("Loaded ", args.env)
 except:
     print(args.env +':Env')
@@ -36,9 +36,14 @@ agent = agentfile.Agent(state_dim, action_dim)
 observation = env.reset()
 
 iterations = 10000
+
+# Helper vars for moving average plot
 window_size = 5
 stored_rewards = [0 for _ in range(window_size)]
 runs = 0
+# Boolean that controls if we count 1 run as an episode (in FrozenLake) 
+# or as 100 iterations(riverswim)
+per_episode = False
 
 for x in range(iterations): 
     #env.render()
@@ -47,32 +52,46 @@ for x in range(iterations):
     agent.observe(observation, reward, done)
 
     if done:
+        if per_episode:
+            runs += 1
+            stored_rewards.append(reward)
+        observation = env.reset() 
+    
+    if not per_episode:
         runs += 1
         stored_rewards.append(reward)
-        observation = env.reset() 
 
 # Not the prettiest code but this plots a linechart with episodes on x-axis and 
 # avg_reward on y axis with error margin indicated automatically by seaborn
-
 values = []
-for i in range(runs):
-    values += stored_rewards[i:i+window_size]
 
-episodes = [i for _ in range(window_size) for i in range(runs)]
+if per_episode:
+    for i in range(runs):
+        values += stored_rewards[i:i+window_size]
 
-plot_df = pd.DataFrame({'episodes': episodes, 'avg_reward': values})
-
+    runs_list = [i for _ in range(window_size) for i in range(runs)]
+else: 
+    for i in range(int(iterations/100)):
+        values.append(sum(stored_rewards[i*100:i*100 + 100]))
+    
+    runs_list = [i for i in range(int(iterations/100))]
+plot_df = pd.DataFrame({'nmb of runs': runs_list, 'avg_reward': values})
 print(plot_df)
     
-# Plot avg_reward for 5 window
-sns.lineplot(data = plot_df, x='episodes', y = 'avg_reward')
+# Plot avg_reward for moving window
+sns.lineplot(data = plot_df, x='nmb of runs', y = 'avg_reward')
 plt.show()
 
 # Print better overview of q
 # l = left, d = down, r = right, u = up
-
 dir_dict = {'0':'l', '1': 'd', '2': 'r', '3':'u' }
 dir_list = []
+
+# Variable to indicate grid size
+horizontal_n = 4
+vertical_n = 4
+
+# Map numerical values to letters
 for a in agent.q:
     max_indx = np.where(a == np.amax(a))
     key = ""
@@ -80,9 +99,7 @@ for a in agent.q:
         key += dir_dict[str(elem)] 
     dir_list.append(key)
 
-
-horizontal_n = 4
-vertical_n = 4
+# Print actions as grid
 for i in range(vertical_n):
     s = '|\t'
     for j in range(horizontal_n):
