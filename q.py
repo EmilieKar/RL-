@@ -7,7 +7,7 @@ class Agent(object): #Keep the class name!
     def __init__(self, state_space, action_space):
         self.action_space = action_space
         self.state_space = state_space
-        self.q = np.zeros((self.state_space,self.action_space))
+        self.q = np.ones((self.state_space,self.action_space))
         self.a = 0.1
         self.g = 0.5
         self.e = 0.05

@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--agentfile", type=str, help="file with Agent object", default="sarsa.py")
+parser.add_argument("--agentfile", type=str, help="file with Agent object", default="doubleq.py")
 parser.add_argument("--env", type=str, help="Environment", default="FrozenLake-v1")
 args = parser.parse_args()
 
@@ -35,15 +35,11 @@ agent = agentfile.Agent(state_dim, action_dim)
 
 observation = env.reset()
 
-iterations = 10000
+iterations = 30000
 
 # Helper vars for moving average plot
-window_size = 5
+window_size = 100
 stored_rewards = [0 for _ in range(window_size)]
-runs = 0
-# Boolean that controls if we count 1 run as an episode (in FrozenLake) 
-# or as 100 iterations(riverswim)
-per_episode = False
 
 for x in range(iterations): 
     #env.render()
@@ -52,34 +48,33 @@ for x in range(iterations):
     agent.observe(observation, reward, done)
 
     if done:
-        if per_episode:
-            runs += 1
-            stored_rewards.append(reward)
         observation = env.reset() 
     
-    if not per_episode:
-        runs += 1
-        stored_rewards.append(reward)
+    stored_rewards.append(reward)
 
-# Not the prettiest code but this plots a linechart with episodes on x-axis and 
-# avg_reward on y axis with error margin indicated automatically by seaborn
+# Plot calculateions
 values = []
+st_devs = []
+sqrt_window = window_size ** (1/2)
 
-if per_episode:
-    for i in range(runs):
-        values += stored_rewards[i:i+window_size]
+for i in range(iterations):
+    tmp = stored_rewards[i:i+window_size]
+    values.append(sum(tmp)/window_size)
+    st_devs.append((sum([((x - values[-1]) ** 2) for x in tmp]) / window_size) ** 0.5)
 
-    runs_list = [i for _ in range(window_size) for i in range(runs)]
-else: 
-    for i in range(int(iterations/100)):
-        values.append(sum(stored_rewards[i*100:i*100 + 100]))
-    
-    runs_list = [i for i in range(int(iterations/100))]
-plot_df = pd.DataFrame({'nmb of runs': runs_list, 'avg_reward': values})
-print(plot_df)
+ci = [1.96 * (st_devs[i]/sqrt_window) for i in range(iterations)]
+
+plot_df = pd.DataFrame({
+    'avg_reward': values,
+    'high_ci': [values[i] + ci[i] for i in range(iterations)],
+    'low_ci':[values[i] - ci[i] for i in range(iterations)]
+})
     
 # Plot avg_reward for moving window
-sns.lineplot(data = plot_df, x='nmb of runs', y = 'avg_reward')
+p = sns.lineplot(data = plot_df, x=plot_df.index, y = 'avg_reward', ci=None)
+p.fill_between(plot_df.index, plot_df.low_ci, plot_df.high_ci, alpha=0.2)
+plt.xlabel('iterations')
+plt.title('Average reward (doubleq-learning, FroznLake-v1, is_slippery=True)')
 plt.show()
 
 # Print better overview of q
