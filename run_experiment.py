@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--agentfile", type=str, help="file with Agent object", default="doubleq.py")
+parser.add_argument("--agentfile", type=str, help="file with Agent object", default="q.py")
 parser.add_argument("--env", type=str, help="Environment", default="FrozenLake-v1")
 args = parser.parse_args()
 
@@ -57,6 +57,7 @@ values = []
 st_devs = []
 sqrt_window = window_size ** (1/2)
 
+
 for i in range(iterations):
     tmp = stored_rewards[i:i+window_size]
     values.append(sum(tmp)/window_size)
@@ -74,7 +75,7 @@ plot_df = pd.DataFrame({
 p = sns.lineplot(data = plot_df, x=plot_df.index, y = 'avg_reward', ci=None)
 p.fill_between(plot_df.index, plot_df.low_ci, plot_df.high_ci, alpha=0.2)
 plt.xlabel('iterations')
-plt.title('Average reward (doubleq-learning, FroznLake-v1, is_slippery=True)')
+plt.title(f'Average reward ({args.agentfile}, FroznLake-v1, is_slippery=True)')
 plt.show()
 
 # Print better overview of q

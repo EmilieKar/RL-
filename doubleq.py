@@ -10,7 +10,7 @@ class Agent(object): #Keep the class name!
         self.q1 = np.zeros((self.state_space,self.action_space))
         self.q2 = np.zeros((self.state_space,self.action_space))
         self.a = 0.1
-        self.g = 0.5
+        self.g = 0.95
         self.e = 0.05
         self.action = 0
         self.state = 0
